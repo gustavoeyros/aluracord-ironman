@@ -1,4 +1,6 @@
 import { Box, Button, Text, TextField, Image } from '@skynexui/components';
+import React from 'react';
+import {useRouter} from 'next/router';
 import appConfig from '../config.json';
 
 function GlobalStyle() {
@@ -65,11 +67,23 @@ function Title(props){
   export default HomePage */
 
   export default function PaginaInicial() {
-    const username = 'gustavoeyros';
+    //const username = 'gustavoeyros';
+    const [username, setUsername]= React.useState('');
+    const roteamento = useRouter();
+    const foto = 'https://thumbs2.imgbox.com/ab/51/ijNw6Rfx_t.jpg';
+    const [DadosGithub, setDadosGithub] = React.useState('');
+    React.useEffect(() => {
+      fetch(`https://api.github.com/users/${username}`).then((RespostaDoServidor) =>{
+        return RespostaDoServidor.json();
+      }).then((RespostaConvertida) =>{
+        console.log('RespostaConvertida', RespostaConvertida)
+        setDadosGithub(RespostaConvertida);
+      })
+    }, [username]);
   
     return (
       <>
-        <GlobalStyle />
+      
         <Box
           styleSheet={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -96,18 +110,33 @@ function Title(props){
             {/* Formulário */}
             <Box
               as="form"
+              onSubmit = {function(infosDoEvento){
+                infosDoEvento.preventDefault();
+                console.log('Testando')
+                roteamento.push('/chat');
+              
+              }}
               styleSheet={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
               }}
             >
-              <Title tag="h2">Boas vindas de volta!</Title>
+              <Title tag="h2">Boas-vindas de volta!</Title>
               <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[300] }}>
                 {appConfig.name}
               </Text>
-  
-              <TextField
+              
+            
+               <TextField
+                value={username}
+                onChange={function (event){
+                  //local do valor
+                  const valor = event.target.value;
+                  //trocar o valor da variavel através do React
+                  setUsername(valor);
+                }}
                 fullWidth
+                placeholder= 'Coloque seu usuário do GitHub'
                 textFieldColors={{
                   neutral: {
                     textColor: appConfig.theme.colors.neutrals['000'],
@@ -116,10 +145,11 @@ function Title(props){
                     backgroundColor: appConfig.theme.colors.neutrals[800],
                   },
                 }}
-              />
+              /> 
               <Button
                 type='submit'
                 label='Entrar'
+                disabled = {username.length <3}
                 fullWidth
                 buttonColors={{
                   contrastColor: appConfig.theme.colors.neutrals["000"],
@@ -148,23 +178,42 @@ function Title(props){
                 minHeight: '240px',
               }}
             >
+            
               <Image
                 styleSheet={{
                   borderRadius: '50%',
                   marginBottom: '16px',
                 }}
-                src={`https://github.com/${username}.png`}
+                const foto = "url(/perfil.jpg)"
+                   src = {
+                    username.length>2 ? `https://github.com/${username}.png` : foto
+                   }
               />
               <Text
                 variant="body4"
                 styleSheet={{
                   color: appConfig.theme.colors.neutrals['000'],
-                  backgroundColor: appConfig.theme.colors.neutrals[900],
+                  backgroundColor: appConfig.theme.colors.neutrals[200],
                   padding: '3px 10px',
                   borderRadius: '1000px'
                 }}
               >
-                {username}
+                
+               {username}
+                
+              </Text>
+               <br></br>
+              <Text
+                variant="body3"
+                styleSheet={{
+                  color: appConfig.theme.colors.neutrals['000'],
+                  backgroundColor: appConfig.theme.colors.neutrals[200],
+                  padding: '3px 10px',
+                  borderRadius: '1000px'
+                }}
+              >
+                {username.length>2 ? [DadosGithub.location] : ''}
+             
               </Text>
             </Box>
             {/* Photo Area */}

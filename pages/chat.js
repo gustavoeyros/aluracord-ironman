@@ -1,32 +1,49 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js';
+import {useRouter} from 'next/router';
+import {ButtonSendSticker} from '../src/components/ButtonSendSticker';
+
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQ3MjkxMSwiZXhwIjoxOTU5MDQ4OTExfQ.ainsdp8VmTA1zh1RLBSI06Hlud38-liCRc2j4ut_0Yw';
+const SUPABASE_URL= 'https://jdzxnbgdijhmwtcusohb.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function mensagemTempoReal(adicionaMensagem){
+   return supabaseClient.from('mensagens').on('INSERT', (respostaLive)=>{
+      adicionaMensagem(respostaLive.new);
+    }).subscribe();
+}
 
 export default function ChatPage() {
+    const roteamento = useRouter();
+    const usuarioLogado = roteamento.query.username;
     const [mensagem, setMensagem] = React.useState('');
     const [ListaMensagem, setListaMensagem] = React.useState([]);
-    /*
-    - Usuário digita na textarea
-    - Aperta enter para mandar a mensagem
-    - Adicionar o texto na listagem 
-    //Dev
-    [X] Campo para digitar
-    [] OnChange para mensagem e um if para o ENTER
-    [] Lista de mensagens
-
-    */
+    React.useEffect(()=>{
+        const dadosSupabase = supabaseClient.from('mensagens').select('*').order('id', {ascending: false}).then(({data})=>{
+            setListaMensagem(data)
+        });
+        mensagemTempoReal((novaMensagem)=>{
+            setListaMensagem((valorAtualDaLista)=>{
+                return [
+                    novaMensagem, 
+                    ...valorAtualDaLista,
+                ]
+            }); 
+        });
+    }, [])
+  
    function handleNovaMensagem(novaMensagem){
        const mensagem = {
-            id: ListaMensagem.length +1,
-            de: 'gustavoeyros',
+            de: usuarioLogado,
             texto: novaMensagem,
 
        };
-       setListaMensagem([
-           mensagem,
-           ...ListaMensagem, 
-           
-        ]);
+       supabaseClient.from('mensagens').insert([mensagem]).then(({data})=>{
+        
+       }) 
+
        setMensagem('');
    }
    function botaoOk(event){
@@ -119,6 +136,7 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals['000'],
                             }}
                         />
+                       
                             <Button
                     type='submit'
                     onClick= {botaoOk}
@@ -138,6 +156,11 @@ export default function ChatPage() {
                     mainColorStrong: appConfig.theme.colors.primary[900],
                     }}
                 />
+                 <ButtonSendSticker
+                 onStickerClick={((sticker)=>{
+                     console.log('Sticker no bd', sticker);
+                     handleNovaMensagem(':sticker:'+sticker)
+                 })} />
                     </Box>
                 </Box>
             </Box>
@@ -154,7 +177,11 @@ function Header() {
                 </Text>
                 <Button
                     variant='tertiary'
-                    colorVariant='neutral'
+                    styleSheet={{
+                        color: 'white',
+                        backgroundColor: 'transparent',
+                        hover: {backgroundColor: 'blue'}
+                    }}
                     label='Logout'
                     href="/"
                 />
@@ -164,12 +191,12 @@ function Header() {
 }
 
 function MessageList(props) {
-    console.log('MessageList', props);
+   // console.log('MessageList', props);
     return (
         <Box
             tag="ul"
             styleSheet={{
-                overflow: 'hidden',
+                overflow: 'auto',
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 flex: 1,
@@ -208,7 +235,7 @@ function MessageList(props) {
                         display: 'inline-block',
                         marginRight: '8px',
                     }}
-                    src={`https://github.com/gustavoeyros.png`}
+                    src={`https://github.com/${mensagem.de}.png`}
                 />
                
                 
@@ -227,7 +254,11 @@ function MessageList(props) {
                     {(new Date().toLocaleDateString())}
                 </Text>
             </Box>
-                    {mensagem.texto}
+            {mensagem.texto.startsWith(':sticker:') ? (
+                 <Image src={mensagem.texto.replace(':sticker:', '')}/>
+            ): (mensagem.texto)}
+                    
+                  
                
         </Text>
         

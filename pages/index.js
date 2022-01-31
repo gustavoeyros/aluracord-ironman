@@ -113,7 +113,7 @@ function Title(props){
               onSubmit = {function(infosDoEvento){
                 infosDoEvento.preventDefault();
                 console.log('Testando')
-                roteamento.push('/chat');
+                roteamento.push(`/chat?username=${username}`);
               
               }}
               styleSheet={{

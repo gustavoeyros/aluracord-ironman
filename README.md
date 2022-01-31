@@ -1,6 +1,6 @@
 # <b>Sobre</b>
  <h3>Projeto de Discord desenvolvido na Imersão React da Alura</h3>
-<br>
+
 
 # <b>Site</b>
 ## Tela Inicial
